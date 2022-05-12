@@ -17,7 +17,7 @@ namespace Athos
         int _iExpressionLength;
         List<string> _lsPreviousWords;
 
-        Blacklist _blackList;
+        Blacklist _blackList;        
         #endregion
 
         #region Constructor
@@ -46,23 +46,57 @@ namespace Athos
             if (!File.Exists(_sFilename))
             {
                 Console.WriteLine($"File unknown : {_sFilename}");
+                return;
             }
-            else
+            
+            try
             {
-                try
+                using (StreamReader sr = new StreamReader(_sFilename))
                 {
-                    using (StreamReader sr = new StreamReader(_sFilename))
+                    bool bFirstLineDone = false;
+
+                    while (sr.Peek() >= 0)
                     {
-                        while (sr.Peek() >= 0)
+                        string sLine = sr.ReadLine();
+                        
+                        // First line can contain metadata
+                        if (!bFirstLineDone)
                         {
-                            ScrapText(sr.ReadLine());
+                            bFirstLineDone = true;
+                            if (sLine.StartsWith("#ATHOS:"))
+                            {
+                                GetMetadata(sLine.Substring("#ATHOS:".Length));
+                                
+                                continue;
+                            }
                         }
+
+                        ScrapText(sr.ReadLine());
                     }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine("The process failed: {0}", e.ToString());
-                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("The process failed: {0}", e.ToString());
+            }
+        }
+        #endregion
+
+        #region Metadata
+        string _sTitle;
+
+        private void GetMetadata(string sData)
+        {
+            GetMetadata_Title(sData);
+        }
+
+        private void GetMetadata_Title(string sData)
+        {
+            Regex regex = new Regex(@"TITLE=(.*);");
+            MatchCollection matches = regex.Matches(sData);
+            if (matches.Count == 1)
+            {
+                _sTitle = matches[0].Groups[1].Value;
             }
         }
         #endregion
@@ -139,7 +173,7 @@ namespace Athos
         #region Output scrapped data
         private void OutputData()
         {
-            string sOutputFile = _sFilename + ".output";
+            string sOutputFile = GenerateOutuptFileName();
 
             List<ScrappedData> lsData = new List<ScrappedData>();
             foreach (KeyValuePair<string, int> kvp in _dicWords)
@@ -156,6 +190,11 @@ namespace Athos
                 {
                     File.Delete(sOutputFile);
                 }
+                string sDirectory = Path.GetDirectoryName(sOutputFile);
+                if (!Directory.Exists(sDirectory))
+                {
+                    Directory.CreateDirectory(sDirectory);
+                }
 
                 using (StreamWriter sw = new StreamWriter(sOutputFile))
                 {
@@ -170,6 +209,18 @@ namespace Athos
             catch (Exception e)
             {
                 Console.WriteLine("The process failed: {0}", e.ToString());
+            }
+        }
+
+        private string GenerateOutuptFileName()
+        {
+            if (!string.IsNullOrEmpty(_sTitle))
+            {
+                return @"generated\" + _sTitle + @"\output.raw.txt";
+            }
+            else
+            {
+                return _sFilename + ".output";
             }
         }
         #endregion
