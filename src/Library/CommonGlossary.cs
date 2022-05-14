@@ -35,6 +35,8 @@ namespace Athos.Library
             HashSet<string> _glossary = new HashSet<string>();
             foreach(Book book in lsBooks)
             {
+                Console.WriteLine($"Processing words from {book._sTitle}");
+
                 foreach(KeyValuePair<string, int> kvp in book._dicRawOutput)
                 {
                     if (_processedWords.Contains(kvp.Key))
@@ -45,7 +47,7 @@ namespace Athos.Library
                     if (dPresence >= _dWordsTakenIntoAccount)
                     {
                         _processedWords.Add(kvp.Key);
-                        Console.WriteLine("--- Processing word ... " + kvp.Key);
+                        Console.WriteLine($"--- Processing word from {book._sTitle} ... {kvp.Key}");
 
                         // Is this word present in at least another book ?
                         foreach(Book otherBook in lsBooks)
@@ -57,7 +59,7 @@ namespace Athos.Library
                                     double dPresenceInOther = otherBook._dicRawOutput[kvp.Key] / otherBook._rawTotal;
                                     if (dPresenceInOther >= _dWordsTakenIntoAccount)
                                     {
-                                        Console.WriteLine("----- Found elsewhere and added !");
+                                        Console.WriteLine($"----- Found in {otherBook._sTitle} and added !");
                                         _glossary.Add(kvp.Key);
                                         break;
                                     }
@@ -81,3 +83,4 @@ namespace Athos.Library
         }
     }
 }
+ 
