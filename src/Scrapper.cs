@@ -108,6 +108,8 @@ namespace Athos
             string sCleanedLine = Regex.Replace(sText, @"[\.,\!\?_»«\:;]", string.Empty);
             sCleanedLine = Regex.Replace(sCleanedLine, @"--", string.Empty);
 
+            
+            
             string[] tWords = sCleanedLine.Split(' ');
 
             foreach(string sWord in tWords)
